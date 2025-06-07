@@ -73,7 +73,12 @@
   function clickSkipButton() {
     const btn = findSkipButton();
     if (btn) {
-      btn.click();
+      // Earlier revisions simply called btn.click() (see commit a4175b1),
+      // but YouTube sometimes ignores that programmatic click.  We now
+      // dispatch pointer and click events to better emulate a real user.
+      ['pointerdown', 'pointerup', 'click'].forEach(type => {
+        btn.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+      });
       return true;
     }
     return false;
@@ -101,16 +106,44 @@
       }
 
       let lastState = player.classList.contains('ad-showing');
+      let speedTimeout = null;
+      let rampInterval = null;
+
+      const clearTimers = () => {
+        clearTimeout(speedTimeout);
+        clearInterval(rampInterval);
+        speedTimeout = null;
+        rampInterval = null;
+      };
+
+      const startRamp = () => {
+        clearTimers();
+        speedTimeout = setTimeout(() => {
+          let rate = video.playbackRate;
+          rampInterval = setInterval(() => {
+            rate = Math.round(Math.min(2, rate + 0.25) * 100) / 100;
+            video.playbackRate = rate;
+            showSpeedIndicator(video.playbackRate);
+            if (rate >= 2) {
+              clearInterval(rampInterval);
+            }
+          }, 250);
+        }, 1100);
+      };
+
       const update = () => {
         const isAd = player.classList.contains('ad-showing');
         if (isAd !== lastState) {
           lastState = isAd;
+          clearTimers();
           if (isAd) {
-            video.playbackRate = 2;
+            video.playbackRate = 1;
+            showSpeedIndicator(video.playbackRate);
+            startRamp();
           } else {
             video.playbackRate = 1;
+            showSpeedIndicator(video.playbackRate);
           }
-          showSpeedIndicator(video.playbackRate);
         }
       };
 
@@ -161,6 +194,11 @@
             adjustVideo(video => { video.playbackRate = wSpeed; });
             break;
           case 'e':
+            // Manual Skip Ad key. Originally added in commit a4175b1 along with
+            // improved button detection. Later attempts (4dabaa2) expanded the
+            // MutationObserver to catch attribute changes, but some users still
+            // reported "e" not working consistently.  Dispatching mouse events
+            // in clickSkipButton is our latest approach.
             clickSkipButton();
             break;
           default:
