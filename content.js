@@ -77,7 +77,8 @@
     // Browsers don't allow scripts to move the real cursor for security
     // reasons. We instead dispatch pointer events at the element so the
     // page reacts as if the user hovered it. This is primarily for debugging
-    // and to better emulate real interaction.
+    // and to better emulate real interaction. To give the user visual
+    // feedback, we also move a small fake cursor overlay to the element.
     const rect = el.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
@@ -91,6 +92,31 @@
         clientY: y
       }));
     });
+    let cursor = document.getElementById('cando-fake-cursor');
+    if (!cursor) {
+      cursor = document.createElement('div');
+      cursor.id = 'cando-fake-cursor';
+      Object.assign(cursor.style, {
+        position: 'fixed',
+        width: '24px',
+        height: '24px',
+        background: 'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath fill=%27black%27 d=%27M0 0 L6 24 L10 14 L20 18 Z%27/%3E%3C/svg%3E") no-repeat center center',
+        backgroundSize: 'contain',
+        pointerEvents: 'none',
+        zIndex: 999999,
+        transform: 'translate(-12px, -12px)',
+        transition: 'top 0.2s ease, left 0.2s ease'
+      });
+      document.body.appendChild(cursor);
+    }
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    cursor.style.display = 'block';
+    console.debug('Fake cursor moved to', {x, y});
+    clearTimeout(cursor._hideTimer);
+    cursor._hideTimer = setTimeout(() => {
+      cursor.style.display = 'none';
+    }, 2000);
   }
 
   function clickSkipButton() {
