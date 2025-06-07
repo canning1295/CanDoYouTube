@@ -1,13 +1,15 @@
 (function() {
   const DEFAULT_SITES = ['youtube.com'];
   const DEFAULT_W_SPEED = 4;
+  const DEFAULT_AD_DELAY = 2; // seconds before speeding up ads
 
   function getSettings() {
     return new Promise(resolve => {
-      chrome.storage.sync.get(['allowedSites', 'wSpeed'], (data) => {
+      chrome.storage.sync.get(['allowedSites', 'wSpeed', 'adDelay'], (data) => {
         resolve({
           allowedSites: data.allowedSites || DEFAULT_SITES,
-          wSpeed: typeof data.wSpeed === 'number' ? data.wSpeed : DEFAULT_W_SPEED
+          wSpeed: typeof data.wSpeed === 'number' ? data.wSpeed : DEFAULT_W_SPEED,
+          adDelay: typeof data.adDelay === 'number' ? data.adDelay : DEFAULT_AD_DELAY
         });
       });
     });
@@ -73,6 +75,7 @@
   function clickSkipButton() {
     const btn = findSkipButton();
     if (btn) {
+      console.debug('Skip button found, attempting click');
       // Earlier revisions simply called btn.click() (see commit a4175b1),
       // but YouTube sometimes ignores that programmatic click.  We now
       // dispatch pointer and click events to better emulate a real user.
@@ -81,6 +84,7 @@
       });
       return true;
     }
+    console.debug('Skip button not found');
     return false;
   }
 
@@ -93,7 +97,7 @@
     setInterval(clickSkipButton, 1000);
   }
 
-  function setupAdSpeed() {
+  function setupAdSpeed(adDelay) {
     if (!location.hostname.includes('youtube.com')) {
       return;
     }
@@ -118,6 +122,7 @@
 
       const startRamp = () => {
         clearTimers();
+        console.debug('Ad detected, will speed up in', adDelay, 's');
         speedTimeout = setTimeout(() => {
           let rate = video.playbackRate;
           rampInterval = setInterval(() => {
@@ -128,7 +133,7 @@
               clearInterval(rampInterval);
             }
           }, 250);
-        }, 1100);
+        }, adDelay * 1000);
       };
 
       const update = () => {
@@ -163,8 +168,8 @@
   }
 
   function init() {
-    getSettings().then(({allowedSites, wSpeed}) => {
-      console.debug('Settings loaded', {allowedSites, wSpeed});
+    getSettings().then(({allowedSites, wSpeed, adDelay}) => {
+      console.debug('Settings loaded', {allowedSites, wSpeed, adDelay});
       if (!isAllowed(location.hostname, allowedSites)) {
         console.debug('Site not allowed for speed control');
         return;
@@ -199,7 +204,9 @@
             // MutationObserver to catch attribute changes, but some users still
             // reported "e" not working consistently.  Dispatching mouse events
             // in clickSkipButton is our latest approach.
-            clickSkipButton();
+            console.debug('"e" key pressed - attempting manual ad skip');
+            const skipped = clickSkipButton();
+            console.debug('Manual skip result', skipped);
             break;
           default:
             return;
@@ -207,7 +214,7 @@
       });
 
       setupAdSkip();
-      setupAdSpeed();
+      setupAdSpeed(adDelay);
     });
   }
 
