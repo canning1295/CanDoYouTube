@@ -3,6 +3,10 @@
   const DEFAULT_W_SPEED = 4;
   const DEFAULT_AD_DELAY = 2; // seconds before speeding up ads
 
+  // Prevent duplicate observers if the script is injected more than once
+  let adSkipInitialized = false;
+  let adSpeedInitialized = false;
+
   function getSettings() {
     return new Promise(resolve => {
       chrome.storage.sync.get(['allowedSites', 'wSpeed', 'adDelay'], (data) => {
@@ -137,18 +141,20 @@
   }
 
   function setupAdSkip() {
-    if (!location.hostname.includes('youtube.com')) {
+    if (!location.hostname.includes('youtube.com') || adSkipInitialized) {
       return;
     }
+    adSkipInitialized = true;
     const observer = new MutationObserver(clickSkipButton);
     observer.observe(document, { childList: true, subtree: true, attributes: true });
     setInterval(clickSkipButton, 1000);
   }
 
   function setupAdSpeed(adDelay) {
-    if (!location.hostname.includes('youtube.com')) {
+    if (!location.hostname.includes('youtube.com') || adSpeedInitialized) {
       return;
     }
+    adSpeedInitialized = true;
 
     const trySetup = () => {
       const player = document.querySelector('.html5-video-player');
