@@ -1,1 +1,23 @@
-# CanDoYouTube
+# CanDoYouTube Extension
+
+This repository contains a simple Chrome extension that lets you control video playback speed with keyboard shortcuts.
+
+## Usage
+
+Load the `CanDoYouTube` folder as an unpacked extension in Chrome and navigate to a supported site such as YouTube. Use the following keys:
+
+- `a` – decrease speed by 0.25×
+- `s` – increase speed by 0.25×
+- `q` – reset speed to 1×
+- `w` – set speed to a custom value (default 4×)
+
+Open the extension options to configure the value for the `w` key and manage the list of allowed sites. Settings are stored using `chrome.storage.sync` so they persist between browser sessions.
+
+## Files
+
+- `manifest.json` – Chrome extension manifest
+- `content.js` – content script that handles keyboard input
+- `options.html` / `options.js` – simple options page
+- `icons/` – extension icons in SVG format
+
+
