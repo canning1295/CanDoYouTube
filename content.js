@@ -124,6 +124,12 @@
   }
 
   function clickSkipButton() {
+    const player = document.querySelector('.html5-video-player');
+    const video = document.querySelector('video');
+    if (!player || !video) {
+      return false;
+    }
+
     const btn = findSkipButton();
     if (btn) {
       console.debug('Skip button found, moving mouse and attempting click');
@@ -145,9 +151,27 @@
       return;
     }
     adSkipInitialized = true;
-    const observer = new MutationObserver(clickSkipButton);
-    observer.observe(document, { childList: true, subtree: true, attributes: true });
-    setInterval(clickSkipButton, 1000);
+
+    const trySetup = () => {
+      const player = document.querySelector('.html5-video-player');
+      const video = document.querySelector('video');
+      if (!player || !video) {
+        return false;
+      }
+
+      const observer = new MutationObserver(clickSkipButton);
+      observer.observe(player, { childList: true, subtree: true, attributes: true });
+      setInterval(clickSkipButton, 1000);
+      return true;
+    };
+
+    if (!trySetup()) {
+      const interval = setInterval(() => {
+        if (trySetup()) {
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
   }
 
   function setupAdSpeed(adDelay) {
