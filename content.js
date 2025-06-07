@@ -53,16 +53,39 @@
     }, 1000);
   }
 
+  function findSkipButton() {
+    const selectors = [
+      '.ytp-skip-ad-button',
+      '.ytp-ad-skip-button',
+      '[id*="skip" i]',
+      '[class*="skip" i]',
+      '[aria-label*="skip" i]'
+    ];
+    const elements = document.querySelectorAll(selectors.join(','));
+    for (const el of elements) {
+      if (el.offsetParent === null) continue; // ignore hidden elements
+      const btn = el.tagName === 'BUTTON' ? el : el.closest('button');
+      if (btn) return btn;
+    }
+    return null;
+  }
+
+  function clickSkipButton() {
+    const btn = findSkipButton();
+    if (btn) {
+      btn.click();
+      return true;
+    }
+    return false;
+  }
+
   function setupAdSkip() {
     if (!location.hostname.includes('youtube.com')) {
       return;
     }
-    setInterval(() => {
-      const skipBtn = document.querySelector('.ytp-skip-ad-button, .ytp-ad-skip-button');
-      if (skipBtn) {
-        skipBtn.click();
-      }
-    }, 1000);
+    const observer = new MutationObserver(clickSkipButton);
+    observer.observe(document, { childList: true, subtree: true });
+    setInterval(clickSkipButton, 1000);
   }
 
   function init() {
@@ -94,6 +117,9 @@
             break;
           case 'w':
             adjustVideo(video => { video.playbackRate = wSpeed; });
+            break;
+          case 'e':
+            clickSkipButton();
             break;
           default:
             return;
