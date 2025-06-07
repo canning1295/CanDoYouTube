@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Speed Control for Video",
+  "version": "1.0",
+  "description": "Adjust playback speed with keyboard shortcuts on supported sites.",
+  "icons": {
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["*://*/*"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "options_page": "options.html"
+}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Speed Control Options</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 10px; }
+    label { display: block; margin-top: 10px; }
+    input[type="text"] { width: 200px; }
+  </style>
+</head>
+<body>
+  <h1>Playback Speed Settings</h1>
+  <label>
+    W key speed:
+    <input type="number" id="wSpeed" step="0.25" min="0.25" />
+  </label>
+  <label>
+    Allowed sites (comma separated domains):
+    <input type="text" id="sites" />
+  </label>
+  <button id="save">Save</button>
+  <div id="status"></div>
+  <script src="options.js"></script>
+</body>
+</html>
