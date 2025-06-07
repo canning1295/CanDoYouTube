@@ -11,6 +11,10 @@ Load the `CanDoYouTube` folder as an unpacked extension in Chrome and navigate t
 - `q` – reset speed to 1×
 - `w` – set speed to a custom value (default 4×)
 
+Whenever you adjust the rate, a small overlay briefly shows the current
+playback speed on the page so you can confirm the setting. Debug logs are
+also written to the browser console when keys are pressed.
+
 Open the extension options to configure the value for the `w` key and manage the list of allowed sites. Settings are stored using `chrome.storage.sync` so they persist between browser sessions.
 
 ## Files

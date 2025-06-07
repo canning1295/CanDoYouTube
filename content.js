@@ -21,12 +21,43 @@
     const video = document.querySelector('video');
     if (video) {
       rateSetter(video);
+      showSpeedIndicator(video.playbackRate);
+      console.debug('Playback rate changed to', video.playbackRate);
     }
+  }
+
+  function showSpeedIndicator(rate) {
+    let indicator = document.getElementById('cando-speed-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.id = 'cando-speed-indicator';
+      Object.assign(indicator.style, {
+        position: 'fixed',
+        bottom: '10%',
+        right: '5%',
+        padding: '4px 8px',
+        background: 'rgba(0,0,0,0.7)',
+        color: '#fff',
+        fontSize: '20px',
+        borderRadius: '4px',
+        zIndex: 9999,
+        pointerEvents: 'none'
+      });
+      document.body.appendChild(indicator);
+    }
+    indicator.textContent = `Speed: ${rate}x`;
+    indicator.style.display = 'block';
+    clearTimeout(indicator._timeout);
+    indicator._timeout = setTimeout(() => {
+      indicator.style.display = 'none';
+    }, 1000);
   }
 
   function init() {
     getSettings().then(({allowedSites, wSpeed}) => {
+      console.debug('Settings loaded', {allowedSites, wSpeed});
       if (!isAllowed(location.hostname, allowedSites)) {
+        console.debug('Site not allowed for speed control');
         return;
       }
 
@@ -34,6 +65,7 @@
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
           return; // ignore typing in inputs
         }
+        console.debug('Key pressed', e.key);
         switch (e.key) {
           case 'a':
             adjustVideo(video => {
@@ -58,5 +90,9 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
