@@ -92,27 +92,41 @@
     if (!location.hostname.includes('youtube.com')) {
       return;
     }
-    const player = document.querySelector('.html5-video-player');
-    const video = document.querySelector('video');
-    if (!player || !video) {
-      return;
-    }
-    let lastState = player.classList.contains('ad-showing');
-    const update = () => {
-      const isAd = player.classList.contains('ad-showing');
-      if (isAd !== lastState) {
-        lastState = isAd;
-        if (isAd) {
-          video.playbackRate = 2;
-        } else {
-          video.playbackRate = 1;
-        }
-        showSpeedIndicator(video.playbackRate);
+
+    const trySetup = () => {
+      const player = document.querySelector('.html5-video-player');
+      const video = document.querySelector('video');
+      if (!player || !video) {
+        return false;
       }
+
+      let lastState = player.classList.contains('ad-showing');
+      const update = () => {
+        const isAd = player.classList.contains('ad-showing');
+        if (isAd !== lastState) {
+          lastState = isAd;
+          if (isAd) {
+            video.playbackRate = 2;
+          } else {
+            video.playbackRate = 1;
+          }
+          showSpeedIndicator(video.playbackRate);
+        }
+      };
+
+      new MutationObserver(update).observe(player, { attributes: true, attributeFilter: ['class'] });
+      setInterval(update, 1000);
+      update();
+      return true;
     };
-    new MutationObserver(update).observe(player, { attributes: true, attributeFilter: ['class'] });
-    setInterval(update, 1000);
-    update();
+
+    if (!trySetup()) {
+      const interval = setInterval(() => {
+        if (trySetup()) {
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
   }
 
   function init() {
