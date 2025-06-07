@@ -10,7 +10,8 @@ Load the `CanDoYouTube` folder as an unpacked extension in Chrome and navigate t
 - `s` – increase speed by 0.25×
 - `q` – reset speed to 1×
 - `w` – set speed to a custom value (default 4×)
-- Skip Ads – on YouTube the extension automatically clicks the "Skip" button whenever it appears
+- `e` – skip ads when the Skip button is available
+- Skip Ads – on YouTube the extension automatically clicks the "Skip" button whenever it appears and listens for new variations of the button
 
 Whenever you adjust the rate, a small overlay briefly shows the current
 playback speed on the page so you can confirm the setting. Debug logs are
