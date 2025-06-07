@@ -53,6 +53,18 @@
     }, 1000);
   }
 
+  function setupAdSkip() {
+    if (!location.hostname.includes('youtube.com')) {
+      return;
+    }
+    setInterval(() => {
+      const skipBtn = document.querySelector('.ytp-skip-ad-button, .ytp-ad-skip-button');
+      if (skipBtn) {
+        skipBtn.click();
+      }
+    }, 1000);
+  }
+
   function init() {
     getSettings().then(({allowedSites, wSpeed}) => {
       console.debug('Settings loaded', {allowedSites, wSpeed});
@@ -87,6 +99,8 @@
             return;
         }
       });
+
+      setupAdSkip();
     });
   }
 
