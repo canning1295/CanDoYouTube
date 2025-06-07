@@ -64,6 +64,7 @@
       '[aria-label*="skip" i]'
     ];
     const elements = document.querySelectorAll(selectors.join(','));
+    console.debug('Searching for skip button among', elements.length, 'elements');
     for (const el of elements) {
       if (el.offsetParent === null) continue; // ignore hidden elements
       const btn = el.tagName === 'BUTTON' ? el : el.closest('button');
@@ -72,10 +73,31 @@
     return null;
   }
 
+  function moveMouseToElement(el) {
+    // Browsers don't allow scripts to move the real cursor for security
+    // reasons. We instead dispatch pointer events at the element so the
+    // page reacts as if the user hovered it. This is primarily for debugging
+    // and to better emulate real interaction.
+    const rect = el.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    console.debug('Simulating mouse move to', {x, y});
+    ['mousemove', 'mouseover', 'mouseenter'].forEach(type => {
+      el.dispatchEvent(new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: x,
+        clientY: y
+      }));
+    });
+  }
+
   function clickSkipButton() {
     const btn = findSkipButton();
     if (btn) {
-      console.debug('Skip button found, attempting click');
+      console.debug('Skip button found, moving mouse and attempting click');
+      moveMouseToElement(btn);
       // Earlier revisions simply called btn.click() (see commit a4175b1),
       // but YouTube sometimes ignores that programmatic click.  We now
       // dispatch pointer and click events to better emulate a real user.
@@ -199,11 +221,15 @@
             adjustVideo(video => { video.playbackRate = wSpeed; });
             break;
           case 'e':
-            // Manual Skip Ad key. Originally added in commit a4175b1 along with
-            // improved button detection. Later attempts (4dabaa2) expanded the
-            // MutationObserver to catch attribute changes, but some users still
-            // reported "e" not working consistently.  Dispatching mouse events
-            // in clickSkipButton is our latest approach.
+            // Manual Skip Ad key. Attempts to get this working have included:
+            //   1. Simple `btn.click()` when the key was pressed.
+            //   2. Adding broader selectors for new Skip button variations.
+            //   3. Observing DOM mutations and attribute changes to detect
+            //      dynamic buttons.
+            //   4. Dispatching pointer/click events instead of `.click()` to
+            //      mimic real interaction (current approach).
+            //   5. Moving a simulated mouse pointer to the button before the
+            //      click to mirror user behaviour (added in this revision).
             console.debug('"e" key pressed - attempting manual ad skip');
             const skipped = clickSkipButton();
             console.debug('Manual skip result', skipped);
