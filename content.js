@@ -63,6 +63,10 @@
   }
 
   function findSkipButton() {
+    const player = document.querySelector('.html5-video-player');
+    if (!player) {
+      return null;
+    }
     const selectors = [
       '.ytp-skip-ad-button',
       '.ytp-ad-skip-button',
@@ -70,7 +74,7 @@
       '[class*="skip" i]',
       '[aria-label*="skip" i]'
     ];
-    const elements = document.querySelectorAll(selectors.join(','));
+    const elements = player.querySelectorAll(selectors.join(','));
     console.debug('Searching for skip button among', elements.length, 'elements');
     for (const el of elements) {
       if (el.offsetParent === null) continue; // ignore hidden elements
