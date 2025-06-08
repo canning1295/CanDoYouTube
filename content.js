@@ -2,7 +2,7 @@
   const DEFAULT_SITES = ['youtube.com'];
   const DEFAULT_W_SPEED = 4;
   const DEFAULT_AD_DELAY = 2; // seconds before speeding up ads
-  const DEFAULT_SKIP_METHOD = 'fast-forward'; // 'fast-forward', 'pointer', 'click'
+  const DEFAULT_SKIP_METHOD = 'pointer'; // 'pointer', 'click', 'fast-forward'
 
   // Prevent duplicate observers if the script is injected more than once
   let adSkipInitialized = false;
@@ -201,7 +201,7 @@
         return false;
       }
 
-      let adPlaying = player.classList.contains('ad-showing');
+      let lastState = player.classList.contains('ad-showing');
       let speedTimeout = null;
       let rampInterval = null;
 
@@ -229,23 +229,18 @@
       };
 
       const update = () => {
-        const currentVideo = document.querySelector('video');
-        if (currentVideo) {
-          video = currentVideo;
-        }
-
         const isAd = player.classList.contains('ad-showing');
-
-        if (isAd && !adPlaying) {
-          adPlaying = true;
-          video.playbackRate = 1;
-          showSpeedIndicator(video.playbackRate);
-          startRamp();
-        } else if (!isAd && adPlaying) {
-          adPlaying = false;
+        if (isAd !== lastState) {
+          lastState = isAd;
           clearTimers();
-          video.playbackRate = 1;
-          showSpeedIndicator(video.playbackRate);
+          if (isAd) {
+            video.playbackRate = 1;
+            showSpeedIndicator(video.playbackRate);
+            startRamp();
+          } else {
+            video.playbackRate = 1;
+            showSpeedIndicator(video.playbackRate);
+          }
         }
       };
 

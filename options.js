@@ -1,7 +1,7 @@
 const DEFAULT_SITES = ['youtube.com'];
 const DEFAULT_W_SPEED = 4;
 const DEFAULT_AD_DELAY = 2;
-const DEFAULT_SKIP_METHOD = 'fast-forward';
+const DEFAULT_SKIP_METHOD = 'pointer';
 
 function loadOptions() {
   chrome.storage.sync.get(['allowedSites', 'wSpeed', 'adDelay', 'skipMethod'], (data) => {
