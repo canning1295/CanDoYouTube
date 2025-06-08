@@ -19,6 +19,7 @@ are also written to the browser console when keys are pressed or when the
 extension searches for and interacts with the Skip button.
 
 Open the extension options to configure the value for the `w` key, set how long the extension waits before speeding up ads, choose how the Skip button is pressed, and manage the list of allowed sites. Settings are stored using `chrome.storage.sync` so they persist between browser sessions.
+By default, ads are skipped using the **Fast-forward then click** method.
 
 ## Files
 
