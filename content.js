@@ -2,18 +2,21 @@
   const DEFAULT_SITES = ['youtube.com'];
   const DEFAULT_W_SPEED = 4;
   const DEFAULT_AD_DELAY = 2; // seconds before speeding up ads
+  const DEFAULT_SKIP_METHOD = 'pointer'; // 'pointer', 'click', 'fast-forward'
 
   // Prevent duplicate observers if the script is injected more than once
   let adSkipInitialized = false;
   let adSpeedInitialized = false;
+  let skipMethodOption = DEFAULT_SKIP_METHOD;
 
   function getSettings() {
     return new Promise(resolve => {
-      chrome.storage.sync.get(['allowedSites', 'wSpeed', 'adDelay'], (data) => {
+      chrome.storage.sync.get(['allowedSites', 'wSpeed', 'adDelay', 'skipMethod'], (data) => {
         resolve({
           allowedSites: data.allowedSites || DEFAULT_SITES,
           wSpeed: typeof data.wSpeed === 'number' ? data.wSpeed : DEFAULT_W_SPEED,
-          adDelay: typeof data.adDelay === 'number' ? data.adDelay : DEFAULT_AD_DELAY
+          adDelay: typeof data.adDelay === 'number' ? data.adDelay : DEFAULT_AD_DELAY,
+          skipMethod: data.skipMethod || DEFAULT_SKIP_METHOD
         });
       });
     });
@@ -123,7 +126,7 @@
     }, 2000);
   }
 
-  function clickSkipButton() {
+  function clickSkipButton(method) {
     const player = document.querySelector('.html5-video-player');
     const video = document.querySelector('video');
     if (!player || !video) {
@@ -131,19 +134,26 @@
     }
 
     const btn = findSkipButton();
-    if (btn) {
-      console.debug('Skip button found, moving mouse and attempting click');
+    if (!btn) {
+      console.debug('Skip button not found');
+      return false;
+    }
+
+    console.debug('Skip button found, using method', method);
+    if (method === 'fast-forward') {
+      if (isFinite(video.duration)) {
+        video.currentTime = video.duration;
+      }
+      btn.click();
+    } else if (method === 'click') {
+      btn.click();
+    } else {
       moveMouseToElement(btn);
-      // Earlier revisions simply called btn.click() (see commit a4175b1),
-      // but YouTube sometimes ignores that programmatic click.  We now
-      // dispatch pointer and click events to better emulate a real user.
       ['pointerdown', 'pointerup', 'click'].forEach(type => {
         btn.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
       });
-      return true;
     }
-    console.debug('Skip button not found');
-    return false;
+    return true;
   }
 
   function setupAdSkip() {
@@ -159,9 +169,9 @@
         return false;
       }
 
-      const observer = new MutationObserver(clickSkipButton);
+      const observer = new MutationObserver(() => clickSkipButton(skipMethodOption));
       observer.observe(player, { childList: true, subtree: true, attributes: true });
-      setInterval(clickSkipButton, 1000);
+      setInterval(() => clickSkipButton(skipMethodOption), 1000);
       return true;
     };
 
@@ -246,8 +256,9 @@
   }
 
   function init() {
-    getSettings().then(({allowedSites, wSpeed, adDelay}) => {
-      console.debug('Settings loaded', {allowedSites, wSpeed, adDelay});
+    getSettings().then(({allowedSites, wSpeed, adDelay, skipMethod}) => {
+      skipMethodOption = skipMethod;
+      console.debug('Settings loaded', {allowedSites, wSpeed, adDelay, skipMethod});
       if (!isAllowed(location.hostname, allowedSites)) {
         console.debug('Site not allowed for speed control');
         return;
@@ -287,7 +298,7 @@
             //   5. Moving a simulated mouse pointer to the button before the
             //      click to mirror user behaviour (added in this revision).
             console.debug('"e" key pressed - attempting manual ad skip');
-            const skipped = clickSkipButton();
+            const skipped = clickSkipButton(skipMethodOption);
             console.debug('Manual skip result', skipped);
             break;
           default:

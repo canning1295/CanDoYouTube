@@ -20,6 +20,14 @@
     <input type="number" id="adDelay" step="0.1" min="0" />
   </label>
   <label>
+    Skip button method:
+    <select id="skipMethod">
+      <option value="pointer">Pointer events</option>
+      <option value="click">Element.click()</option>
+      <option value="fast-forward">Fast-forward then click</option>
+    </select>
+  </label>
+  <label>
     Allowed sites (comma separated domains):
     <input type="text" id="sites" />
   </label>
